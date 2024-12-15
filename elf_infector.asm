@@ -14,6 +14,12 @@ section .data
 	ok_read_msg db "Lecture correcte du fichier", 0xA
 	ok_read_msg_len equ $ - ok_read_msg
 
+	; elf msg elf check
+	error_elf_msg db "Fichier non ELF", 0xA
+	error_elf_msg_len equ $ - error_elf_msg
+	ok_elf_msg db "Fichier ELF", 0xA
+	ok_elf_msg_len equ $ -  ok_elf_msg
+
 section .bss
 	buffer resb buffer_size		; Je reserve un espace memoire pour mon elf
 
@@ -44,9 +50,28 @@ _start:
 	js _error_read
 	call _ok_read
 
-
+	; On va stoquer le buffer dans R15 car quasiment jamais touché
+	lea r15, [buffer]
+	
+	; Check si fichier ELF
+	cmp dword  [r15], 0x464C457F
+	; 	gestion erreur elf
+	jne _error_elf
+	call _ok_elf
 	call _exit
 
+_ok_elf:
+	lea rsi, [rel ok_elf_msg]
+	mov rdx, ok_elf_msg_len
+	call _print_msg
+	ret
+_error_elf:
+	lea rsi, [rel error_elf_msg]
+	mov rdx, error_elf_msg_len
+	call _print_msg
+	mov rax, 60
+	mov rdi, 1			; code retour pour non elf
+	syscall
 
 _ok_read:
 	lea rsi,  [rel ok_read_msg]
