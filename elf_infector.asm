@@ -19,6 +19,12 @@ section .data
 	error_elf_msg_len equ $ - error_elf_msg
 	ok_elf_msg db "Fichier ELF", 0xA
 	ok_elf_msg_len equ $ -  ok_elf_msg
+	
+	; pt_note msg 
+	error_pt_note_msg db "Ce n'est pas un PT_NOTE", 0xA
+	error_pt_note_msg_len equ $ - error_pt_note_msg 
+	ok_pt_note_msg db "C'est un PT_NOTE", 0xA
+	ok_pt_note_msg_len equ $ - ok_pt_note_msg
 
 section .bss
 	buffer resb buffer_size		; Je reserve un espace memoire pour mon elf
@@ -58,7 +64,43 @@ _start:
 	; 	gestion erreur elf
 	jne _error_elf
 	call _ok_elf
+
+	; On va jump jusqu'à e_entry qui se trouve dans l'header
+	; Normalement il se trouve en r15+168 puis on le stock dans r14
+	mov r14, [r15+168]
+
+	; On peut maintenant parser le programme header phdr
+	xor rcx, rcx
+	xor rdx, rdx
+	mov cx, word [r15+0x38]		; e_phnum
+	mov rbx, qword [r15+0x20]	; e_phoff
+	mov dx, word [r15+0x36]		; e_phentsize
+
+	; On cherche un PT_NOTE phdr
+	call _loop_phdr
+
+
 	call _exit
+
+_ok_pt_note:
+	lea rsi, [rel ok_pt_note_msg]
+	mov rdx, ok_pt_note_msg_len
+	call _print_msg
+	call _exit
+
+
+_loop_phdr:
+	add rbx, rdx
+	dec rcx				; Decrémente le nombre de phdr
+	cmp dword [r15+rbx], 0x4	; On check si PT_NOTE (p_type == 0x4) 
+	je _ok_pt_note			; On a trouver un PT_NOTE phdr			; Sinon on check si il reste des phdr a comparer
+	lea rsi, [rel error_pt_note_msg]
+	mov rdx, error_pt_note_msg_len
+	call _print_msg
+	xor rdx,rdx
+	mov dx, word [r15+0x36]
+	cmp rcx, 0
+	jg _loop_phdr
 
 _ok_elf:
 	lea rsi, [rel ok_elf_msg]
