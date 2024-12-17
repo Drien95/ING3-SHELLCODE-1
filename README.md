@@ -1,7 +1,7 @@
 
 # ELF Infector
 
-Projet IN3 de Shellcode.
+Projet ING3 de Shellcode.
 Réalisation d'une infection ELF PT_NOTE --> PT_LOAD en asm
 
 ## Objectif
@@ -270,21 +270,21 @@ Revoir le `e_entry`, c'est peut-être ici que ça a foiré.
 
 ## Problèmes rencontrer
 
-Au départ ce fut assez dur de se repérer dans la stack.
+Au départ, ce fut assez dur de se repérer dans la stack.
 
-Beaucoup de mal à comprendre ce que faisait certaines instructions.
+Beaucoup de mal à comprendre ce que faisaient certaines instructions.
 
 Comme ce fut le premier projet en x86, je n'ai pas compris tout de suite que `RAX` était basiquement le registre de retour pour tout les sys_call
 
-Ce familiariser avec le langage n'a pas été facil car de très bas niveau.
+Se familiariser avec le langage n'a pas été facile car de très bas niveau.
 
-Prendre en main les sys_call, j'ai du aller faire beaucoup d'aller retour entre le `man` et `gdb` pour comprendre réellement ce que faisait chaque fonctions.
+Prendre en main les sys_call, j'ai du aller faire beaucoup d'aller-retour entre le `man` et `gdb` pour comprendre réellement ce que faisait chaque fonction.
 
-En parlant de `gdb`, je n'avais clairement pas l'habitude d'utiliser un débogeur au début.
+En parlant de `gdb`, je n'avais clairement pas l'habitude d'utiliser un débogueur au début.
 
-Les plus gros problèmes sont encore à ce jour:
+Les plus gros problèmes sont encore à ce jour :
 
-Ce répérer avec `lseek()`: quand j'ai réécris mon header et mon segment, j'ai eu pas mal de problèmes à me situer correctement.
+Ce repérer avec `lseek()`: quand j'ai réécris mon header et mon segment, j'ai eu pas mal de problèmes à me situer correctement.
 
 
 ## Axes d'amélioration
@@ -293,9 +293,9 @@ Ce programme ne prend pas en charge les ELF-32bits pour le moment.
 
 Prendre en charge les ELF en big-indian.
 
-Pouvoir infecter un fichier en rentrant un argument dans l'exe (Pour le moment limiter à `/tmp/ls`)
+Pouvoir infecter un fichier en rentrant un argument dans l'exe (pour le moment, limiter à `/tmp/ls`)
 
-Pouvoir infecter Récursivement
+Pouvoir infecter récursivement
 
 
 
