@@ -90,7 +90,7 @@ Ensuite vérifier que c'est bien un fichier ELF
 
 Initialisation de quelques Registres  :
 
-```bash
+```asm
 ; On va prendre la taille du fichier avec sys_stat
         mov rax, 0x5                    ; fstat(
         mov rdi, r13                    ; int fd,
@@ -105,7 +105,7 @@ Initialisation de quelques Registres  :
 
 On attaque le parsing ensuite
 
-```bash
+```asm
 ; On peut maintenant parser le programme header phdr
         xor rcx, rcx                    ; Initialise rcx
         xor rdx, rdx                    ; Initialise rdx
@@ -133,7 +133,7 @@ loop_phdr:
 
 ## 3/4/5/6/7. PT_NOTE --> PT_LOAD
 
-```bash
+```asm
 ok_pt_note:
         lea rsi, [rel ok_pt_note_msg]
         mov rdx, ok_pt_note_msg_len
@@ -153,7 +153,7 @@ ok_pt_note:
 ## 8. Injection du shellcode à la fin du fichier
 
 
-```bash
+```asm
 
 ; On va aller à la fin du file EOF pour injecter notre shellcode avec sys_lseek
         mov rax, 0x8                    ; lseek(
@@ -175,7 +175,7 @@ ok_pt_note:
 
 ## 9. Réécriture du fichier sur le disque
 
-```bash
+```asm
 ; On réécrit notre header, pour ça on retourne au début du fichier ou à e_phoff
         ; syscall sys_lseek
         mov rax, 0x8                    ; lseek(
@@ -287,7 +287,7 @@ Les plus gros problèmes sont encore à ce jour :
 Ce repérer avec `lseek()`: quand j'ai réécris mon header et mon segment, j'ai eu pas mal de problèmes à me situer correctement.
 
 
-## Axes d'amélioration
+## Axes d'améliorations
 
 Ce programme ne prend pas en charge les ELF-32bits pour le moment.
 
